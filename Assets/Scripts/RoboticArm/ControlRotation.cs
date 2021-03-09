@@ -1,50 +1,64 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 namespace RoboticArm
 {
     public class ControlRotation : MonoBehaviour
     {
-        [Header("Parameters")]
+        public bool IsMoving { get; private set; }
+        public bool HasMoved { get; private set; }
+
         [SerializeField] private Axis axisToRotate;
-        [SerializeField] private float speed = 10f;
         
-        [Header("Clamping")]
-        [SerializeField] private float clampedAngleMin;
-        [SerializeField] private float clampedAngleMax;
-        [SerializeField] private bool enableClamp;
-
-        private float movedAngle;
         private Vector3 axis;
-        
-        public void RotateClockwise() => RotateAroundAxis(-speed);
-        public void RotateCounterClockwise() => RotateAroundAxis(speed);
+        private Quaternion startRotation;
 
-        private void Start() => axis = ReturnAxis();
-
-        private void RotateAroundAxis(float angle)
+        private void Awake()
         {
-            if (enableClamp)
-            {
-                float nextAngle = movedAngle + angle;
-                if (!(clampedAngleMin < nextAngle) || !(nextAngle < clampedAngleMax))
-                    return;
-                
-                movedAngle += angle;
-
-                transform.Rotate(axis);
-                return;
-            }
-            
-            transform.Rotate(axis, angle);
+            axis = GetAxis();
+            startRotation = transform.localRotation;
         }
 
-        private Vector3 ReturnAxis()
+        public virtual void RotateAroundAxis(float angle) => RotateAroundAxis(angle, 0.2f);
+        
+        public virtual void RotateAroundAxis(float angle, float speed)
+        {
+            Vector3 newRotation = transform.localRotation.eulerAngles + axis * angle;
+            StartCoroutine(LerpRotation(newRotation, speed));
+            HasMoved = true;
+        }
+
+        public void ResetRotation()
+        {
+            StartCoroutine(LerpRotation(startRotation.eulerAngles, 1f));
+            HasMoved = false;
+        }
+        
+        private IEnumerator LerpRotation(Vector3 newRotation, float timeInSeconds)
+        {
+            float timer = 0f;
+            Vector3 initialRotation = transform.localRotation.eulerAngles;
+            IsMoving = true;
+            
+            while (timer <= timeInSeconds)
+            {
+                timer += Time.deltaTime;
+                float t = timer / timeInSeconds;
+                Vector3 lerpRotation = Vector3.Lerp(initialRotation, newRotation, t);
+                transform.localRotation = Quaternion.Euler(lerpRotation);
+                yield return null;
+            }
+
+            IsMoving = false;
+        }
+
+        private Vector3 GetAxis()
         {
             switch (axisToRotate)
             {
-                case Axis.X: return transform.right.normalized;
-                case Axis.Y: return transform.up.normalized;
-                case Axis.Z: return transform.forward.normalized;
+                case Axis.X: return Vector3.right;
+                case Axis.Y: return Vector3.up;
+                case Axis.Z: return Vector3.forward;
                 default: return Vector3.zero;
             }
         }
