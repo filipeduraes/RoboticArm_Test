@@ -1,0 +1,13 @@
+﻿# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/projectSettingsUpdater.xml
+/modules.xml
+/.idea.RoboticArm_Test.iml
+# Datasource local storage ignored files
+/../../../../../../../../../:\Users\Filipe\Documents\GitHub\RoboticArm_Test\.idea\.idea.RoboticArm_Test\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
